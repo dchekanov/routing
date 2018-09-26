@@ -1,0 +1,26 @@
+{
+  "name": "@keleran/routing",
+  "version": "1.0.0",
+  "repository": "github:dchekanov/routing",
+  "license": "MIT",
+  "author": {
+    "name": "Dmitry Chekanov",
+    "email": "d.chekanov@gmail.com",
+    "url": "http://dmitrychekanov.com/"
+  },
+  "files": [
+    "index.js"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --require=intelli-espower-loader test/*.js"
+  },
+  "devDependencies": {
+    "intelli-espower-loader": "^1.0.1",
+    "mocha": "^5.2.0",
+    "power-assert": "^1.6.1"
+  },
+  "engines": {
+    "node": "^10.10"
+  }
+}
