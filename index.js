@@ -75,11 +75,30 @@ module.exports.discover = rootDir => {
 module.exports.mount = ({routes, app, root = '/'}) => {
   routes.forEach(route => {
     allowedMethods.forEach(method => {
-      const routeMethodModule = route[method];
+      const routeMethodModulePath = route[method];
 
-      if (!routeMethodModule) return;
+      if (!routeMethodModulePath) return;
 
-      app[method](path.posix.join(root, route.path), (req, res, next) => require(routeMethodModule)(req, res, next));
+      app[method](path.posix.join(root, route.path), (req, res, next) => {
+        const routeMethodModule = require(routeMethodModulePath);
+        const {user} = req;
+        let {permissions} = routeMethodModule;
+        let permissionsChecked = Promise.resolve();
+
+        if (user && typeof user.can === 'function' && permissions) {
+          if (typeof permissions === 'function') permissions = permissions(res.locals, req.params);
+
+          if (!(typeof permissions === 'object' && permissions.constructor === Object)) {
+            throw new Error('PERMISSIONS_FORMAT_INVALID');
+          }
+
+          const checked = Object.keys(permissions).map(action => user.can(action, permissions[action]));
+
+          permissionsChecked = Promise.all(checked);
+        }
+
+        permissionsChecked.then(() => (routeMethodModule.handler || routeMethodModule)(req, res, next)).catch(next);
+      });
     });
   });
 };
