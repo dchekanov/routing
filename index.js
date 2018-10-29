@@ -83,7 +83,6 @@ module.exports.mount = ({routes, app, root = '/'}) => {
         const routeMethodModule = require(routeMethodModulePath);
         const {user} = req;
         let {permissions} = routeMethodModule;
-        let permissionsChecked = Promise.resolve();
 
         if (user && typeof user.can === 'function' && permissions) {
           if (typeof permissions === 'function') permissions = permissions(res.locals, req.params);
@@ -94,10 +93,10 @@ module.exports.mount = ({routes, app, root = '/'}) => {
 
           const checked = Object.keys(permissions).map(action => user.can(action, permissions[action]));
 
-          permissionsChecked = Promise.all(checked);
+          if (!checked.every(permitted => permitted)) throw new Error('FORBIDDEN');
         }
 
-        permissionsChecked.then(() => (routeMethodModule.handler || routeMethodModule)(req, res, next)).catch(next);
+        Promise.resolve((routeMethodModule.handler || routeMethodModule)(req, res, next)).catch(next);
       });
     });
   });
