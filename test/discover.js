@@ -1,5 +1,6 @@
 const assert = require('assert');
 const routing = require('../index');
+const fs = require('fs');
 
 describe('Discover', function() {
   it('should throw on missing path parameter', function() {
@@ -11,6 +12,12 @@ describe('Discover', function() {
   });
 
   it('should ignore empty directories', function() {
+    try {
+      fs.mkdirSync('test/discover/empty');
+    } catch (err) {
+      if (err.code !== 'EEXIST') throw err;
+    }
+
     const routes = routing.discover('test/discover/empty');
 
     assert(routes.length === 0);
