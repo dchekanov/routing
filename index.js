@@ -85,7 +85,7 @@ module.exports.mount = ({routes, app, root = '/'}) => {
         let {permissions} = routeMethodModule;
 
         if (user && typeof user.can === 'function' && permissions) {
-          if (typeof permissions === 'function') permissions = permissions(res.locals, req.params);
+          if (typeof permissions === 'function') permissions = permissions(res.locals, req.params, req.body);
 
           if (!(typeof permissions === 'object' && permissions.constructor === Object)) {
             throw new Error('PERMISSIONS_FORMAT_INVALID');
