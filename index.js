@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
+const {RateLimiterMemory} = require('rate-limiter-flexible');
 const allowedMethods = ['use', 'get', 'post', 'put', 'patch', 'delete'];
+const rateLimiters = {};
 
 /**
  * Convert directory name to a parameter.
@@ -82,7 +84,7 @@ module.exports.mount = ({routes, app, root = '/'}) => {
       app[method](path.posix.join(root, route.path), (req, res, next) => {
         const routeMethodModule = require(routeMethodModulePath);
         const {user} = req;
-        let {permissions} = routeMethodModule;
+        let {permissions, rateLimit} = routeMethodModule;
 
         if (user && typeof user.can === 'function' && permissions) {
           if (typeof permissions === 'function') permissions = permissions(res.locals, req.params, req.body);
@@ -96,7 +98,32 @@ module.exports.mount = ({routes, app, root = '/'}) => {
           if (!checked.every(permitted => permitted)) throw new Error('FORBIDDEN');
         }
 
-        Promise.resolve((routeMethodModule.handler || routeMethodModule)(req, res, next)).catch(next);
+        let rateLimitApplied = Promise.resolve();
+
+        if (rateLimit) {
+          if (!rateLimit.keyPrefix) rateLimit.keyPrefix = 'default';
+
+          let rateLimiter = rateLimiters[rateLimit.keyPrefix];
+
+          if (!rateLimiter) rateLimiter = rateLimiters[rateLimit.keyPrefix] = new RateLimiterMemory(rateLimit);
+
+          rateLimitApplied = rateLimiter.consume(req.ip).catch(err => {
+            if ('remainingPoints' in err) {
+              let message = 'Too many requests. Please try again in a few seconds.';
+
+              if (typeof req.__ === 'function') message = req.__(message);
+              if (typeof res.createError === 'function') throw res.createError(429, message);
+
+              throw new Error(message);
+            }
+
+            throw err;
+          });
+        }
+
+        const handler = routeMethodModule.handler || routeMethodModule;
+
+        rateLimitApplied.then(() => handler(req, res, next)).catch(next);
       });
     });
   });
