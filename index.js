@@ -32,7 +32,7 @@ module.exports.discover = rootDir => {
   function discoverInDirectory(sourceDir, routePath = '/') {
     const entries = fs.readdirSync(sourceDir, {withFileTypes: true});
     const dirs = entries.filter(entry => entry.isDirectory());
-    const files = entries.filter(entry => entry.isFile());
+    const files = entries.filter(entry => entry.isFile() && entry.name.endsWith('.js'));
     const route = {path: routePath};
 
     files.forEach(file => {
