@@ -95,7 +95,11 @@ module.exports.mount = ({routes, app, root = '/'}) => {
 
           const checked = Object.keys(permissions).map(action => user.can(action, permissions[action]));
 
-          if (!checked.every(permitted => permitted)) throw new Error('FORBIDDEN');
+          if (!checked.every(permitted => permitted)) {
+            if (typeof res.createError === 'function') throw res.createError(403);
+
+            throw new Error('FORBIDDEN');
+          }
         }
 
         let rateLimitApplied = Promise.resolve();
