@@ -1,29 +1,48 @@
 {
   "name": "@keleran/routing",
-  "version": "1.3.3",
-  "repository": "github:dchekanov/routing",
+  "version": "2.0.0",
+  "description": "Routing toolkit for Node.js projects",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dchekanov/routing.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dchekanov/routing/issues"
+  },
+  "homepage": "https://github.com/dchekanov/routing#readme",
   "license": "MIT",
   "author": {
     "name": "Dmitry Chekanov",
     "email": "d.chekanov@gmail.com",
-    "url": "http://dmitrychekanov.com/"
+    "url": "https://dmitrychekanov.com/"
   },
   "files": [
-    "index.js"
+    "index.js",
+    "lib"
   ],
+  "directories": {
+    "lib": "lib"
+  },
   "main": "index.js",
   "scripts": {
-    "test": "mocha --require=intelli-espower-loader test/*.js"
+    "test": "mocha --require=intelli-espower-loader test/*.js",
+    "coverage": "env SPAWN_WRAP_SHIM_ROOT='test/.nyc' nyc --reporter=lcov --report-dir=test/.nyc --temp-directory=test/.nyc mocha --require=intelli-espower-loader test/*.js",
+    "sonar-local": "sonar-scanner -Dsonar.host.url=http://localhost:9000 -Dsonar.login= -Dsonar.organization=default-organization -Dsonar.projectKey=routing"
   },
   "devDependencies": {
     "intelli-espower-loader": "^1.0.1",
-    "mocha": "^5.2.0",
-    "power-assert": "^1.6.1"
+    "mocha": "^6.2.2",
+    "nyc": "^15.0.0",
+    "power-assert": "^1.6.1",
+    "sinon": "^8.0.0"
   },
   "engines": {
-    "node": "^10.10"
+    "node": ">=10.10 <=12"
   },
   "dependencies": {
-    "rate-limiter-flexible": "^0.25.2"
+    "err-code": "^2.0.0",
+    "http-errors": "^1.7.3",
+    "ms": "^2.1.2",
+    "rate-limiter-flexible": "^1.2.0"
   }
 }
