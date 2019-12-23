@@ -3,17 +3,14 @@ on: push
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: [10, 12]
     steps:
     - uses: actions/checkout@v1
       with:
         fetch-depth: 1
-    - name: Use Node.js ${{ matrix.node }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node }}
+    - name: Use Node.js 12
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
     - name: npm install and test
       run: |
         npm ci
@@ -22,8 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
       - name: Use Node.js 12
         uses: actions/setup-node@v1
         with:
