@@ -1,6 +1,6 @@
 {
   "name": "@keleran/routing",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Routing toolkit for Node.js projects",
   "repository": {
     "type": "git",
@@ -34,7 +34,7 @@
     "mocha": "^8.0.1",
     "nyc": "^15.1.0",
     "power-assert": "^1.6.1",
-    "sinon": "^8.1.1"
+    "sinon": "^9.0.2"
   },
   "engines": {
     "node": "12"
