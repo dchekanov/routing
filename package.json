@@ -1,6 +1,6 @@
 {
   "name": "@keleran/routing",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Routing toolkit for Node.js projects",
   "repository": {
     "type": "git",
@@ -41,8 +41,8 @@
   },
   "dependencies": {
     "err-code": "^2.0.3",
-    "http-errors": "^1.7.3",
+    "http-errors": "^1.8.0",
     "ms": "^2.1.2",
-    "rate-limiter-flexible": "^2.1.7"
+    "rate-limiter-flexible": "^2.1.9"
   }
 }
