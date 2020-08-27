@@ -1,6 +1,6 @@
 const assert = require('assert');
 const sinon = require('sinon');
-const mount = require('../lib/mount');
+const {discover, mount} = require('../index');
 const {HttpError} = require('http-errors');
 
 /**
@@ -30,6 +30,46 @@ function pipe({pipeline, req, res, next} = {}) {
   return runStage(0);
 }
 
+describe('discover', function() {
+  it('throws if the "dir" parameter is not a non-empty string', function() {
+    assert.throws(() => discover({}), {name: 'Error', code: 'DIR_INVALID'});
+    assert.throws(() => discover({dir: true}), {name: 'Error', code: 'DIR_INVALID'});
+    assert.throws(() => discover({dir: 10}), {name: 'Error', code: 'DIR_INVALID'});
+    assert.throws(() => discover({dir: ''}), {name: 'Error', code: 'DIR_INVALID'});
+  });
+
+  it('throws if the "dir" parameter points to a non-existing directory', function() {
+    assert.throws(() => discover({dir: 'missing'}), {name: 'Error', code: 'ENOENT'});
+  });
+
+  it('throws if the "route" parameter is not a non-empty string', function() {
+    assert.throws(() => discover({dir: 'test/routes/plain', route: true}), {name: 'Error', code: 'ROOT_INVALID'});
+    assert.throws(() => discover({dir: 'test/routes/plain', route: 10}), {name: 'Error', code: 'ROOT_INVALID'});
+    assert.throws(() => discover({dir: 'test/routes/plain', route: ' '}), {name: 'Error', code: 'ROOT_INVALID'});
+  });
+
+  it('throws if route file does not export the "handle" function', function() {
+    assert.throws(
+      () => discover({dir: 'test/routes/no-handle'}),
+      {name: 'Error', code: 'HANDLE_INVALID'}
+    );
+  });
+
+  it('throws if route file exports an invalid "rateLimit" member', function() {
+    assert.throws(
+      () => discover({dir: 'test/routes/rate-limit-invalid'}),
+      {name: 'Error', code: 'RATE_LIMIT_INVALID'}
+    );
+  });
+
+  it('throws if route file exports an invalid "authorize" member', function() {
+    assert.throws(
+      () => discover({dir: 'test/routes/authorize-invalid'}),
+      {name: 'Error', code: 'AUTHORIZE_INVALID'}
+    );
+  });
+});
+
 describe('mount', function() {
   const app = {};
 
@@ -45,46 +85,25 @@ describe('mount', function() {
 
   beforeEach(() => sinon.reset());
 
-  it('throws if the "dir" parameter is not a non-empty string', function() {
-    assert.throws(() => mount({app}), {name: 'Error', code: 'DIR_INVALID'});
-    assert.throws(() => mount({app, dir: true}), {name: 'Error', code: 'DIR_INVALID'});
-    assert.throws(() => mount({app, dir: 10}), {name: 'Error', code: 'DIR_INVALID'});
-    assert.throws(() => mount({app, dir: ''}), {name: 'Error', code: 'DIR_INVALID'});
-  });
-
-  it('throws if the "dir" parameter points to a non-existing directory', function() {
-    assert.throws(() => mount({app, dir: 'missing'}), {name: 'Error', code: 'ENOENT'});
-  });
-
-  it('throws if the "route" parameter is not a non-empty string', function() {
-    assert.throws(() => mount({app, dir: 'test/routes/plain', route: true}), {name: 'Error', code: 'ROOT_INVALID'});
-    assert.throws(() => mount({app, dir: 'test/routes/plain', route: 10}), {name: 'Error', code: 'ROOT_INVALID'});
-    assert.throws(() => mount({app, dir: 'test/routes/plain', route: ' '}), {name: 'Error', code: 'ROOT_INVALID'});
-  });
-
-  it('throws if route file does not export the "handle" function', function() {
-    assert.throws(
-      () => mount({app, dir: 'test/routes/no-handle'}),
-      {name: 'Error', code: 'HANDLE_INVALID'}
-    );
-  });
-
-  it('throws if route file exports an invalid "rateLimit" member', function() {
-    assert.throws(
-      () => mount({app, dir: 'test/routes/rate-limit-invalid'}),
-      {name: 'Error', code: 'RATE_LIMIT_INVALID'}
-    );
-  });
-
-  it('throws if route file exports an invalid "authorize" member', function() {
-    assert.throws(
-      () => mount({app, dir: 'test/routes/authorize-invalid'}),
-      {name: 'Error', code: 'AUTHORIZE_INVALID'}
-    );
+  it('throws when neither "dir" nor "handlers" is supplied', function() {
+    assert.throws(() => mount({}), {name: 'Error', code: 'SOURCE_INVALID'});
   });
 
   it('mounts a plain list of routes', function() {
     mount({app, dir: 'test/routes/plain'});
+
+    ['get', 'post', 'put', 'patch', 'delete'].forEach(method => {
+      assert(app[method].calledOnce);
+      assert(app[method].firstCall.args[0] === '/');
+      assert(Array.isArray(app[method].firstCall.args[1]));
+      assert(app[method].firstCall.args[1].every(element => typeof element === 'function'));
+    });
+  });
+
+  it('mounts routes when supplied with already discovered handlers', function() {
+    const handlers = discover({dir: 'test/routes/plain'});
+
+    mount({app, handlers});
 
     ['get', 'post', 'put', 'patch', 'delete'].forEach(method => {
       assert(app[method].calledOnce);
@@ -195,13 +214,5 @@ describe('mount', function() {
     assert(next.calledOnce);
     assert(next.firstCall.args[0] instanceof Error);
     assert(next.firstCall.args[0].message === 'MIDDLEWARE');
-  });
-});
-
-describe('index', function() {
-  it('exposes the "mount" function', function() {
-    const index = require('../index');
-
-    assert(index.mount === mount);
   });
 });

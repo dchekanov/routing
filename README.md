@@ -14,10 +14,20 @@ $ npm i @keleran/routing
 ```
 
 ```javascript
-const {mount} = require('@keleran/routing');
+const {discover, mount} = require('@keleran/routing');
 ```
 
-## mount utility
+## `discover`
+
+Returns a flat list of route handlers found in the specified directory. 
+If you don't need to work with the list before mounting, use `mount` directly - it returns the same data.
+
+```javascript
+// [{route: String, method: String, source: Object, pipeline: Array}, ...]
+const handlers = discover({dir: 'routes'});
+```
+
+## `mount`
 
 Reads a file tree and mounts request handlers to the specified Express app.
 

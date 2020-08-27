@@ -1,7 +1,7 @@
 {
   "name": "@keleran/routing",
-  "version": "2.0.4",
-  "description": "Routing toolkit for Node.js projects",
+  "version": "2.1.0",
+  "description": "Routing utilities for Node.js projects",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dchekanov/routing.git"
@@ -31,10 +31,10 @@
   },
   "devDependencies": {
     "intelli-espower-loader": "^1.0.1",
-    "mocha": "^8.0.1",
+    "mocha": "^8.1.2",
     "nyc": "^15.1.0",
     "power-assert": "^1.6.1",
-    "sinon": "^9.0.2"
+    "sinon": "^9.0.3"
   },
   "engines": {
     "node": "12"
@@ -43,6 +43,6 @@
     "err-code": "^2.0.3",
     "http-errors": "^1.8.0",
     "ms": "^2.1.2",
-    "rate-limiter-flexible": "^2.1.9"
+    "rate-limiter-flexible": "^2.1.10"
   }
 }
