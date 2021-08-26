@@ -1,7 +1,7 @@
 # @keleran/routing
 
 Utilities that help with request routing in Node.js projects.  
-Works with Node.js 12.
+Works with Node.js 12, 14.
 
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/dchekanov/routing/Test)
 ![Sonar Coverage](https://img.shields.io/sonar/coverage/dchekanov_routing?server=https%3A%2F%2Fsonarcloud.io&sonarVersion=8.0)
