@@ -4,8 +4,5 @@
 # 3rd-party modules
 node_modules
 
-# SonarQube
-.scannerwork
-
-# test coverage and temp data
-test/.nyc
+# test coverage data
+test/.coverage

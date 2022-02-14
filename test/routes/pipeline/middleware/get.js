@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   middleware: (req, res, next) => {
     next(new Error('MIDDLEWARE'));
   },

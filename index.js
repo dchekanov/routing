@@ -1,9 +1,9 @@
-const fs = require('fs');
-const path = require('path');
-const errCode = require('err-code');
-const httpErrors = require('http-errors');
-const ms = require('ms');
-const {RateLimiterMemory, RateLimiterRes} = require('rate-limiter-flexible');
+import fs from 'fs';
+import path from 'path';
+import errCode from 'err-code';
+import httpErrors from 'http-errors';
+import ms from 'ms';
+import {RateLimiterMemory, RateLimiterRes} from 'rate-limiter-flexible';
 
 /**
  * Place "=..." dirents last in the array.
@@ -124,9 +124,9 @@ function assemblePipeline({rateLimit, authorize, middleware, handle} = {}) {
  * Find route handlers in the directory.
  * @param {string} dir
  * @param {string} [route]
- * @returns {[]}
+ * @returns {Promise<*[]>}
  */
-function discover({dir, route = '/'} = {}) {
+async function discover({dir, route = '/'} = {}) {
   if (typeof dir !== 'string') {
     throw errCode(new Error('The "dir" parameter is not a string'), 'DIR_INVALID');
   }
@@ -146,39 +146,34 @@ function discover({dir, route = '/'} = {}) {
   const handlers = [];
   const dirents = fs.readdirSync(dir, {withFileTypes: true});
 
-  dirents
-    .filter(dirent => dirent.isFile())
-    .forEach(dirent => {
-      const direntPath = path.resolve(path.join(dir, dirent.name));
-      const source = require(direntPath);
-      const pipeline = assemblePipeline(source);
-      const method = path.basename(dirent.name, '.js');
+  for (const dirent of dirents.filter(dirent => dirent.isFile())) {
+    const direntPath = path.resolve(path.join(dir, dirent.name));
+    const module = await import(direntPath);
+    const pipeline = assemblePipeline(module.default);
+    const method = path.basename(dirent.name, '.js');
 
-      handlers.push({route, method, source, pipeline});
-    });
+    handlers.push({route, method, module, pipeline});
+  }
 
-  dirents
-    .filter(dirent => dirent.isDirectory())
-    // routes with parameters must be mounted the last for other routes to be reachable
-    .sort(paramLast)
-    .forEach(dirent => {
-      let direntBranch;
+  // routes with parameters must be mounted the last for other routes to be reachable
+  for (const dirent of dirents.filter(dirent => dirent.isDirectory()).sort(paramLast)) {
+    let direntBranch;
 
-      if (dirent.name === '=') {
-        // names equal to "=" are used to represent "*" wildcard
-        direntBranch = '*';
-      } else if (dirent.name.startsWith('=')) {
-        // names starting with the "=" character are used to represent parameters
-        direntBranch = dirent.name.replace('=', ':').replace(/-(\w)/g, (match, p1) => p1.toUpperCase());
-      } else {
-        direntBranch = dirent.name;
-      }
+    if (dirent.name === '=') {
+      // names equal to "=" are used to represent "*" wildcard
+      direntBranch = '*';
+    } else if (dirent.name.startsWith('=')) {
+      // names starting with the "=" character are used to represent parameters
+      direntBranch = dirent.name.replace('=', ':').replace(/-(\w)/g, (match, p1) => p1.toUpperCase());
+    } else {
+      direntBranch = dirent.name;
+    }
 
-      const direntDir = path.resolve(path.join(dir, dirent.name));
-      const direntRoute = path.posix.join(route, direntBranch);
+    const direntDir = path.resolve(path.join(dir, dirent.name));
+    const direntRoute = path.posix.join(route, direntBranch);
 
-      discover({dir: direntDir, route: direntRoute}).forEach(handler => handlers.push(handler));
-    });
+    (await discover({dir: direntDir, route: direntRoute})).forEach(handler => handlers.push(handler));
+  }
 
   return handlers;
 }
@@ -189,23 +184,20 @@ function discover({dir, route = '/'} = {}) {
  * @param {Array} [handlers]
  * @param {Object} app
  * @param {string} [route]
- * @throws {Error} DIR_INVALID
- * @throws {Error} ROOT_INVALID
+ * @returns {Promise<*[]>}
  */
-function mount({dir, handlers, app, route = '/'} = {}) {
+async function mount({dir, handlers, app, route = '/'} = {}) {
   if (typeof dir !== 'string' && !Array.isArray(handlers)) {
-    throw errCode(new Error('Missing "dir" (string) or "handlers" (array) parameter'), 'SOURCE_INVALID');
+    throw errCode(new Error('Missing "dir" (string) or "handlers" (array) parameter'), 'MODULE_INVALID');
   }
 
   if (!Array.isArray(handlers)) {
-    handlers = discover({dir, route});
+    handlers = await discover({dir, route});
   }
 
-  handlers.forEach(({route, method, pipeline}) => {
-    app[method](route, pipeline);
-  });
+  handlers.forEach(({route, method, pipeline}) => app[method](route, pipeline));
 
   return handlers;
 }
 
-module.exports = {discover, mount};
+export {discover, mount};
