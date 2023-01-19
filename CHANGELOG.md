@@ -6,3 +6,5 @@
 * Dropped Node.js 12 support.
 * Dropped SonarQube scanning.
 * Invalid route file content triggers error with code "MODULE_INVALID" instead of "SOURCE_INVALID".
+* Node.js 18 has been added to the test matrix.
+* Updated dependencies.
