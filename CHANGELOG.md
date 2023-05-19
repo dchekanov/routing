@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.0.0
+
+* Dropped support for Node.js 14.
+* Added support for Node.js 20.
+* Updated dependencies.
+
 ## 3.0.0
 
 * Converted to ESM.

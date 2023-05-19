@@ -1,7 +1,7 @@
 # @keleran/routing
 
 Utilities to simplify request routing in Node.js projects.  
-Use ESM, require Node.js 14+.
+Use ESM, require Node.js 16+.
 
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/dchekanov/routing/Test)
 
